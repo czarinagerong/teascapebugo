@@ -322,7 +322,6 @@ function TrackOrderWidget() {
           <p className="text-xs mb-3" style={{ color: '#5C2A0A' }}>
             {result.customer} · {result.type} · ₱{result.total}
           </p>
-          {/* ── Fix: pass order ID so track page pre-fills and shows details ── */}
           <button
             onClick={() => navigate('/track', { state: { prefillId: result.id } })}
             className="w-full py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
@@ -389,7 +388,6 @@ function StarRating({ rating, onChange }: { rating: number; onChange?: (r: numbe
 
 function ReviewsSection() {
   const REVIEWS_PER_PAGE = 3;
-  // ── UPDATED: start with seed reviews, then load from backend ──
   const [allReviews, setAllReviews] = useState<Review[]>(SEED_REVIEWS);
   const [page, setPage] = useState(0);
   const [showForm, setShowForm] = useState(false);
@@ -398,27 +396,27 @@ function ReviewsSection() {
   const [text, setText] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  // ── UPDATED: load reviews from backend on mount ──
+  // ── Load reviews from backend on mount ──
   useEffect(() => {
     getReviews()
-    .then((data) => {
-      if (!Array.isArray(data)) return;
-      const fromDb: Review[] = data.map(r => ({
-        id: r.id,
-        name: r.name,
-        rating: r.rating,
-        text: r.text,
-        date: new Date(r.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-      }));
-      setAllReviews([...fromDb, ...SEED_REVIEWS.filter(s => !fromDb.find(r => r.name === s.name && r.text === s.text))]);
-    })
-    .catch(() => {}); // silently keep seed reviews if backend fails
+      .then((data) => {
+        if (!Array.isArray(data)) return;
+        const fromDb: Review[] = data.map(r => ({
+          id: r.id,
+          name: r.name,
+          rating: r.rating,
+          text: r.text,
+          date: new Date(r.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+        }));
+        setAllReviews([...fromDb, ...SEED_REVIEWS.filter(s => !fromDb.find(r => r.name === s.name && r.text === s.text))]);
+      })
+      .catch(() => {});
   }, []);
 
   const totalPages = Math.ceil(allReviews.length / REVIEWS_PER_PAGE);
   const visible = allReviews.slice(page * REVIEWS_PER_PAGE, page * REVIEWS_PER_PAGE + REVIEWS_PER_PAGE);
 
-  // ── UPDATED: submit review to backend instead of localStorage ──
+  // ── FIX: handleSubmit is explicitly async and standalone ──
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !text.trim()) return;
@@ -442,7 +440,9 @@ function ReviewsSection() {
       };
       setAllReviews(prev => [newReview, ...prev]);
     }
-    setName(''); setRating(5); setText('');
+    setName('');
+    setRating(5);
+    setText('');
     setSubmitted(true);
     setShowForm(false);
     setPage(0);
@@ -549,7 +549,6 @@ export default function Home() {
     setTimeout(() => setToast(false), 2500);
   };
 
-  // ── FIXED: no more Date.now() loop collision; uses stable ID + quantity ──
   const handleAdd = (item: typeof featured[0], opts: { size: string; flavor: string; addons: string[]; qty: number }) => {
     const full = menuItems.find(m => m.id === item.id) || item;
     let price = (full as any).priceM || (full as any).price || item.price;
