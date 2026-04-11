@@ -125,3 +125,9 @@ export async function getPublicMenuItems(): Promise<MenuItem[]> {
 export async function getStoreStatus(): Promise<{ isOpen: boolean; closeReason: string }> {
   return apiFetch('/store/status');
 }
+export async function getReviews(): Promise<{ id: string; name: string; rating: number; text: string; created_at: string }[]> {
+  return apiFetch('/reviews');
+}
+export async function submitReview(name: string, rating: number, text: string): Promise<{ id: string; name: string; rating: number; text: string; created_at: string }> {
+  return apiFetch('/reviews', { method: 'POST', body: JSON.stringify({ name, rating, text }) });
+}

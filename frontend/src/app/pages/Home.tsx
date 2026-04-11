@@ -7,7 +7,7 @@ import { motion, useInView } from 'motion/react';
 import { useApp } from '../context/AppContext';
 import { getFeaturedItems, menuItems } from '../data/menuData';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
-import { trackOrder } from '../lib/api';
+import { trackOrder, getReviews, submitReview } from '../lib/api';
 
 const TEASCAPE_PHONE = '09053957046';
 
@@ -400,38 +400,26 @@ function ReviewsSection() {
 
   // ── UPDATED: load reviews from backend on mount ──
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/reviews`)
-      .then(r => r.json())
-      .then((data: any[]) => {
-        if (!Array.isArray(data)) return;
-        const fromDb: Review[] = data.map(r => ({
-          id: r.id,
-          name: r.name,
-          rating: r.rating,
-          text: r.text,
-          date: new Date(r.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-        }));
-        // Merge: DB reviews first, then any seed reviews not already in DB
-        setAllReviews([...fromDb, ...SEED_REVIEWS.filter(s => !fromDb.find(r => r.name === s.name && r.text === s.text))]);
-      })
-      .catch(() => {}); // silently keep seed reviews if backend fails
+    getReviews()
+    .then((data) => {
+      if (!Array.isArray(data)) return;
+      const fromDb: Review[] = data.map(r => ({
+        id: r.id,
+        name: r.name,
+        rating: r.rating,
+        text: r.text,
+        date: new Date(r.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      }));
+      setAllReviews([...fromDb, ...SEED_REVIEWS.filter(s => !fromDb.find(r => r.name === s.name && r.text === s.text))]);
+    })
+    .catch(() => {}); // silently keep seed reviews if backend fails
   }, []);
 
   const totalPages = Math.ceil(allReviews.length / REVIEWS_PER_PAGE);
   const visible = allReviews.slice(page * REVIEWS_PER_PAGE, page * REVIEWS_PER_PAGE + REVIEWS_PER_PAGE);
 
   // ── UPDATED: submit review to backend instead of localStorage ──
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || !text.trim()) return;
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/reviews`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), rating, text: text.trim() }),
-      });
-      if (!res.ok) throw new Error('Failed to submit');
-      const saved = await res.json();
+  const saved = await submitReview(name.trim(), rating, text.trim());
       const newReview: Review = {
         id: saved.id,
         name: saved.name,
