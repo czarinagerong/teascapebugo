@@ -70,7 +70,6 @@ export default function OrderTracking() {
     try {
       await cancelOrder(result.id);
       setCancelled(true);
-      setResult(prev => prev ? { ...prev, status: 'Delivered' } : prev); // hide further actions
     } catch (err) {
       setCancelError(err instanceof Error ? err.message : 'Could not cancel order. Please contact us.');
     } finally {

@@ -8,9 +8,9 @@ import { useApp } from '../context/AppContext';
 import type { OnlineOrder } from '../context/AppContext';
 import { DeliveryMap } from '../components/DeliveryMap';
 import { isOrderingOpen, generateTimeSlots } from '../hooks/useStoreStatus';
+import { getStoreStatus } from '../lib/api';
 
 const STEPS = ['Cart', 'Checkout', 'Payment', 'Confirmation'];
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -32,13 +32,12 @@ export default function Checkout() {
   const [closeReason, setCloseReason]     = useState('');
 
   useEffect(() => {
-    fetch(`${BASE}/store/status`)
-      .then(r => r.json())
-      .then(data => {
-        setManuallyOpen(data.isOpen);
-        setCloseReason(data.closeReason || '');
-      })
-      .catch(() => {}); // fallback: assume open
+    getStoreStatus()
+    .then(data => {
+      setManuallyOpen(data.isOpen);
+      setCloseReason(data.closeReason || '');
+    })
+    .catch(() => {}); // fallback: assume open
   }, []);
 
   const nameRef  = useRef<HTMLInputElement>(null);

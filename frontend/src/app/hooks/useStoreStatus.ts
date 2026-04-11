@@ -1,6 +1,5 @@
+import { getStoreStatus } from '../lib/api';
 import { useState, useEffect } from 'react';
-
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export interface StoreStatus {
   isOpen: boolean;
@@ -12,11 +11,10 @@ export function useStoreStatus() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    fetch(`${BASE}/store/status`)
-      .then(r => r.json())
-      .then(data => setStatus(data))
-      .catch(() => {})
-      .finally(() => setLoaded(true));
+    getStoreStatus()
+    .then(data => setStatus(data))
+    .catch(() => {})
+    .finally(() => setLoaded(true));
   }, []);
 
   return { ...status, loaded };

@@ -122,3 +122,6 @@ export async function uploadMenuImage(base64: string, mimeType: string): Promise
 export async function getPublicMenuItems(): Promise<MenuItem[]> {
   return apiFetch('/menu/items');
 }
+export async function getStoreStatus(): Promise<{ isOpen: boolean; closeReason: string }> {
+  return apiFetch('/store/status');
+}

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { ShoppingBag, DollarSign, Clock, ChefHat, Truck, Store, CreditCard, Wallet, Sun, Coffee, Moon, Power, AlertTriangle, Calendar } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { getStaffOrders, toggleStore } from '../lib/api';
+import { getStaffOrders, toggleStore, getStoreStatus } from '../lib/api';
 import type { OnlineOrder } from '../context/AppContext';
 
 const PIE_COLORS = ['#b88917', '#6B3F1E'];
@@ -104,13 +104,12 @@ export default function StaffDashboard() {
   }, [token]);
 
   const fetchStoreStatus = useCallback(async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/store/status`);
-      const data = await res.json();
-      setStoreOpen(data.isOpen);
-      setCloseReason(data.closeReason || '');
-    } catch {}
-  }, []);
+  try {
+    const data = await getStoreStatus();
+    setStoreOpen(data.isOpen);
+    setCloseReason(data.closeReason || '');
+  } catch {}
+}, []);
 
   useEffect(() => {
     fetchOrders();
