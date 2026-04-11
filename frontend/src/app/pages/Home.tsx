@@ -419,26 +419,26 @@ function ReviewsSection() {
   const visible = allReviews.slice(page * REVIEWS_PER_PAGE, page * REVIEWS_PER_PAGE + REVIEWS_PER_PAGE);
 
   // ── UPDATED: submit review to backend instead of localStorage ──
+try {
   const saved = await submitReview(name.trim(), rating, text.trim());
-      const newReview: Review = {
-        id: saved.id,
-        name: saved.name,
-        rating: saved.rating,
-        text: saved.text,
-        date: new Date(saved.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-      };
-      setAllReviews(prev => [newReview, ...prev]);
-    } catch {
-      // Fallback: show optimistically if backend fails
-      const newReview: Review = {
-        id: `r-${Date.now()}`,
-        name: name.trim(),
-        rating,
-        text: text.trim(),
-        date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-      };
-      setAllReviews(prev => [newReview, ...prev]);
-    }
+  const newReview: Review = {
+    id: saved.id,
+    name: saved.name,
+    rating: saved.rating,
+    text: saved.text,
+    date: new Date(saved.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+  };
+  setAllReviews(prev => [newReview, ...prev]);
+} catch {
+  const newReview: Review = {
+    id: `r-${Date.now()}`,
+    name: name.trim(),
+    rating,
+    text: text.trim(),
+    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+  };
+  setAllReviews(prev => [newReview, ...prev]);
+}
     setName(''); setRating(5); setText('');
     setSubmitted(true);
     setShowForm(false);
