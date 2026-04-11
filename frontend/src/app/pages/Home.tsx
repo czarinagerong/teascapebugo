@@ -419,7 +419,6 @@ function ReviewsSection() {
   const visible = allReviews.slice(page * REVIEWS_PER_PAGE, page * REVIEWS_PER_PAGE + REVIEWS_PER_PAGE);
 
   // ── UPDATED: submit review to backend instead of localStorage ──
-  // ── UPDATED: submit review to backend instead of localStorage ──
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !text.trim()) return;
