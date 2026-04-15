@@ -37,12 +37,15 @@ export function StaffLayout() {
         setActiveOrderCount(activeOrders);
 
         const currentTotal = orders.length;
-        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-          new Notification('Teascape Management', {
-            body: '🔔 New Order Received!',
-            icon: teascapeLogoImg,
-          });
-        }
+
+        // Only notify when a NEW order arrives (not on every poll)
+        if (prevTotalRef.current !== null && currentTotal > prevTotalRef.current) {
+          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            new Notification('Teascape Management', {
+              body: '🔔 New Order Received!',
+              icon: teascapeLogoImg,
+            });
+          }
           try {
             const ctx = audioCtxRef.current || new (window.AudioContext || (window as any).webkitAudioContext)();
             audioCtxRef.current = ctx;
@@ -56,6 +59,7 @@ export function StaffLayout() {
             osc.start(); osc.stop(ctx.currentTime + 0.4);
           } catch (_) {}
         }
+
         prevTotalRef.current = currentTotal;
       } catch (err) {
         console.error('Layout Sync Error', err);
