@@ -139,7 +139,9 @@ export default function Checkout() {
     };
 
     if (payment === 'gcash') {
-      await addCustomerOrder(adminOrder);
+      // DO NOT push to database yet! 
+      // Temporarily save the order details so the Payment page can submit it later.
+      sessionStorage.setItem('teascape_pending_admin_order', JSON.stringify(adminOrder));
       sessionStorage.setItem('teascape_pending_order_id', orderId);
       navigate('/payment');
     } else {

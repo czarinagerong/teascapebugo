@@ -11,7 +11,7 @@ const GCASH_NAME = 'Teascape Bugo';
 
 export default function PaymentGcash() {
   const navigate = useNavigate();
-  const { cartSubtotal, orderInfo, cart, setPlacedOrder, clearCart, attachReceiptToOrder } = useApp();
+  const { cartSubtotal, orderInfo, cart, setPlacedOrder, clearCart, attachReceiptToOrder, addCustomerOrder } = useApp();
 
   const deliveryFee = orderInfo?.deliveryFee || 0;
   const total = cartSubtotal + deliveryFee;
@@ -50,6 +50,20 @@ export default function PaymentGcash() {
       const savedOrderId = sessionStorage.getItem('teascape_pending_order_id');
       const orderId = savedOrderId || `TSC-${Date.now().toString().slice(-6)}`;
 
+      // 1. Get the saved order details we stored earlier
+      const savedAdminOrderStr = sessionStorage.getItem('teascape_pending_admin_order');
+      if (!savedAdminOrderStr) {
+        setError('Order details lost. Please cancel and try checking out again.');
+        setSubmitting(false);
+        return;
+      }
+      
+      const adminOrder = JSON.parse(savedAdminOrderStr);
+
+      // 2. Send the order to the database NOW
+      await addCustomerOrder(adminOrder);
+
+      // 3. Upload the receipt picture
       let receiptUrl: string | undefined;
       if (receiptPreview && receiptFile) {
         try {
@@ -61,16 +75,17 @@ export default function PaymentGcash() {
         }
       }
 
+      // 4. Clean up memory
       sessionStorage.removeItem('teascape_pending_order_id');
+      sessionStorage.removeItem('teascape_pending_admin_order');
 
-      // ── FIX 4: SNAPSHOT CART BEFORE CLEARING ────────────────────────────────
       const cartSnapshot = [...cart];
       const subtotalSnapshot = cartSubtotal;
 
       setPlacedOrder({
         ...orderInfo, 
         orderId, 
-        items: cartSnapshot, // Use snapshot
+        items: cartSnapshot, 
         subtotal: subtotalSnapshot, 
         total, 
         placedAt: new Date(),
@@ -78,9 +93,12 @@ export default function PaymentGcash() {
       });
 
       clearCart();
-      // ────────────────────────────────────────────────────────────────────────
 
+      // Go to the confirmation page
       navigate('/confirmation', { state: { orderId } });
+    } catch (err) {
+      console.error(err);
+      setError('Something went wrong. Please try again.');
     } finally {
       setSubmitting(false);
     }
