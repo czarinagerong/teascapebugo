@@ -50,7 +50,6 @@ export default function PaymentGcash() {
       const savedOrderId = sessionStorage.getItem('teascape_pending_order_id');
       const orderId = savedOrderId || `TSC-${Date.now().toString().slice(-6)}`;
 
-      // 1. Get the saved order details we stored earlier
       const savedAdminOrderStr = sessionStorage.getItem('teascape_pending_admin_order');
       if (!savedAdminOrderStr) {
         setError('Order details lost. Please cancel and try checking out again.');
@@ -60,18 +59,34 @@ export default function PaymentGcash() {
       
       const adminOrder = JSON.parse(savedAdminOrderStr);
 
-      // 2. Send the order to the database NOW
-      await addCustomerOrder(adminOrder);
-
-      // 3. Upload the receipt picture
+      // 1. UPLOAD THE RECEIPT FIRST (Wait for the image to finish uploading)
       let receiptUrl: string | undefined;
       if (receiptPreview && receiptFile) {
         try {
           receiptUrl = await uploadReceipt(receiptPreview, orderId, receiptFile.type);
+          
+          // Attach the image URL directly to the order data so it's there from the start
+          if (receiptUrl) {
+            adminOrder.receiptImage = receiptUrl;
+          }
+        } catch (err) {
+          console.warn('[Teascape] Receipt upload failed:', err);
+          setError('Failed to upload receipt image. Please try again.');
+          setSubmitting(false);
+          return; // Stop here if the upload fails
+        }
+      }
+
+      // 2. NOW SEND THE ORDER TO THE DATABASE (It will now have the image attached!)
+      await addCustomerOrder(adminOrder);
+
+      // 3. Run fallback attach functions just in case your API relies on them
+      if (receiptUrl) {
+        try {
           await attachReceipt(orderId, receiptUrl);
           if (attachReceiptToOrder) await attachReceiptToOrder(orderId, receiptUrl);
         } catch (err) {
-          console.warn('[Teascape] Receipt upload failed:', err);
+          // silent catch
         }
       }
 
