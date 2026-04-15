@@ -26,7 +26,9 @@ export function StaffLayout() {
   useEffect(() => {
     if (!token) return;
 
-    if (Notification.permission === 'default') Notification.requestPermission();
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
 
     const checkUpdates = async () => {
       try {
@@ -35,13 +37,12 @@ export function StaffLayout() {
         setActiveOrderCount(activeOrders);
 
         const currentTotal = orders.length;
-        if (prevTotalRef.current !== null && currentTotal > prevTotalRef.current) {
-          if (Notification.permission === 'granted') {
-            new Notification('Teascape Management', {
-              body: '🔔 New Order Received!',
-              icon: teascapeLogoImg,
-            });
-          }
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          new Notification('Teascape Management', {
+            body: '🔔 New Order Received!',
+            icon: teascapeLogoImg,
+          });
+        }
           try {
             const ctx = audioCtxRef.current || new (window.AudioContext || (window as any).webkitAudioContext)();
             audioCtxRef.current = ctx;
