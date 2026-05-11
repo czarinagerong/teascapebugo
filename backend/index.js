@@ -11,7 +11,15 @@ dotenv.config();
 const app = express();
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
-app.use(cors({ origin: process.env.FRONTEND_URL, methods: ["GET","POST","PATCH","DELETE","OPTIONS"], allowedHeaders: ["Content-Type","Authorization"] }));
+app.use(cors({ 
+  origin: [
+    process.env.FRONTEND_URL, // Your Vercel domain (from Render settings)
+    "http://localhost:5173",  // Your local Vite frontend
+    "http://localhost:3000"   // Just in case you use port 3000
+  ], 
+  methods: ["GET","POST","PATCH","DELETE","OPTIONS"], 
+  allowedHeaders: ["Content-Type","Authorization"] 
+}));
 app.use(express.json({ limit: "10mb" }));
 
 const orderLimiter = rateLimit({ windowMs: 15*60*1000, max: 10, message: { error: "Too many orders. Please wait 15 minutes." } });
